@@ -232,7 +232,7 @@ struct HomeView: View {
 
     // MARK: - Share Function
     private func shareGame() {
-        let message = "Check out Slot.io, the best slot machine game!"
+        let message = "I'm playing Slot.io and my balance is $\(viewModel.balance)! Try it out!"
         let activityVC = UIActivityViewController(activityItems: [message], applicationActivities: nil)
         
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -795,16 +795,5 @@ struct SettingsView: View {
             }
             .padding()
         }
-    }
-}
-
-func shareGame() {
-    @EnvironmentObject var viewModel: GameViewModel
-    
-    let shareText = "I'm playing Slot.io and my balance is $\(viewModel.balance)! Try it out!"
-    let activityVC = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
-    if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-       let rootVC = scene.windows.first?.rootViewController {
-        rootVC.present(activityVC, animated: true, completion: nil)
     }
 }
