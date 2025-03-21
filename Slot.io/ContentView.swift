@@ -22,7 +22,14 @@ class GameViewModel: ObservableObject {
 
     // MARK: - Settings
     @Published var soundEnabled: Bool = UserDefaults.standard.bool(forKey: "soundEnabled")
-    @Published var soundVolume: Float = UserDefaults.standard.float(forKey: "soundVolume")
+    @Published var soundVolume: Float = UserDefaults.standard.float(forKey: "soundVolume") {
+        didSet {
+            UserDefaults.standard.set(soundVolume, forKey: "soundVolume")
+            audioPlayer?.volume = soundVolume // Update volume in real-time
+        }
+    }
+
+    var audioPlayer: AVAudioPlayer?
 
     // MARK: - Sound Effects
     let spinSound = Bundle.main.path(forResource: "spin", ofType: "wav")
@@ -130,11 +137,13 @@ class GameViewModel: ObservableObject {
     // MARK: - Play Sound
     func playSound(sound: String?) {
         guard let sound = sound, soundEnabled else { return }
-        
-        var soundID: SystemSoundID = 0
-        AudioServicesCreateSystemSoundID(URL(fileURLWithPath: sound) as CFURL, &soundID)
-        AudioServicesPlaySystemSoundWithCompletion(soundID) {
-            AudioServicesSetProperty(kAudioServicesPropertyIsUISound, UInt32(MemoryLayout.size(ofValue: soundID)), &soundID, UInt32(MemoryLayout.size(ofValue: self.soundVolume)), &self.soundVolume)
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: sound))
+            audioPlayer?.volume = soundVolume
+            audioPlayer?.play()
+        } catch {
+            print("Error playing sound: \(error.localizedDescription)")
         }
     }
 
@@ -382,7 +391,7 @@ struct PoorMansSlotView: View {
                         .cornerRadius(8)
                         .transition(.opacity)
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                                 withAnimation {
                                     self.resultMessage = nil
                                 }
@@ -436,7 +445,7 @@ struct PoorMansSlotView: View {
     }
 
     private func hideMessageAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation {
                 self.resultMessage = nil
             }
@@ -490,7 +499,7 @@ struct BudgetSlotView: View {
                         .cornerRadius(10)
                         .transition(.opacity)
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                                 withAnimation {
                                     self.resultMessage = nil
                                 }
@@ -540,7 +549,7 @@ struct BudgetSlotView: View {
     }
 
     private func hideMessageAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation {
                 self.resultMessage = nil
             }
@@ -593,7 +602,7 @@ struct StandardSlotView: View {
                         .cornerRadius(10)
                         .transition(.opacity)
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                                 withAnimation {
                                     self.resultMessage = nil
                                 }
@@ -643,7 +652,7 @@ struct StandardSlotView: View {
     }
 
     private func hideMessageAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation {
                 self.resultMessage = nil
             }
@@ -698,7 +707,7 @@ struct ExpensiveSlotView: View {
                         .cornerRadius(10)
                         .transition(.opacity)
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                                 withAnimation {
                                     self.resultMessage = nil
                                 }
@@ -748,7 +757,7 @@ struct ExpensiveSlotView: View {
     }
 
     private func hideMessageAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation {
                 self.resultMessage = nil
             }
@@ -806,7 +815,7 @@ struct VIPSlotView: View {
                         .multilineTextAlignment(.center)
                         .transition(.opacity)
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                                 withAnimation {
                                     self.resultMessage = nil
                                 }
@@ -857,7 +866,7 @@ struct VIPSlotView: View {
     }
 
     private func hideMessageAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation {
                 self.resultMessage = nil
             }
