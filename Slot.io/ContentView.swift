@@ -344,56 +344,109 @@ struct PoorMansSlotView: View {
     @State private var resultMessage: String?
 
     var body: some View {
-        VStack(spacing: 15) {
-            Text("🪵 Poor Man’s Slot 🪵")
-                .font(.title)
-                .foregroundColor(.brown)
+        ZStack {
+            Color.black.edgesIgnoringSafeArea(.all) // Full black background
 
-            Text("Balance: $\(viewModel.balance)")
-                .font(.headline)
-                .foregroundColor(.gray)
+            VStack(spacing: 15) {
+                Text("🪵 Poor Man’s Slot 🪵")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.rustyBrown)
+                    .shadow(color: .black.opacity(0.5), radius: 2)
 
-            HStack {
-                ForEach(viewModel.slotResults[0], id: \.self) { number in
-                    Text("\(number == -1 ? "?" : "\(number)")")
-                        .font(.largeTitle)
-                        .frame(width: 50, height: 50)
-                        .background(Color.brown.opacity(0.7))
-                        .cornerRadius(5)
-                        .foregroundColor(.white)
+                Text("Balance: $\(viewModel.balance)")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+
+                HStack {
+                    ForEach(viewModel.slotResults[0], id: \.self) { number in
+                        Text(slotNumberText(for: number))
+                            .font(.title)
+                            .frame(width: 50, height: 50)
+                            .background(Color.brown.opacity(0.6))
+                            .cornerRadius(5)
+                            .foregroundColor(.white)
+                            .shadow(radius: 1)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .stroke(Color.black.opacity(0.5), lineWidth: 1)
+                            )
+                    }
                 }
-            }
 
-            Button(action: spinSlot) {
-                Text("Spin for $\(viewModel.slotCosts[0])")
-                    .padding()
-                    .background(Color.brown)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                if let resultMessage = resultMessage {
+                    Text(resultMessage)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(8)
+                        .transition(.opacity)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation {
+                                    self.resultMessage = nil
+                                }
+                            }
+                        }
+                }
+
+                Button(action: spinSlot) {
+                    Text("Spin for $\(viewModel.slotCosts[0])")
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(isSpinning ? Color.gray : Color.rustyBrown)
+                        .foregroundColor(.black)
+                        .cornerRadius(10)
+                        .shadow(radius: 2)
+                }
+                .disabled(isSpinning)
             }
-            .disabled(isSpinning)
+            .padding()
+            .frame(maxWidth: 300)
+            .background(Color.brown.opacity(0.3))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black.opacity(0.4), lineWidth: 2)
+            )
+            .shadow(radius: 4)
+            .animation(.easeInOut, value: resultMessage)
         }
-        .padding()
-        .background(Color.black.opacity(0.1))
-        .cornerRadius(10)
     }
-    
-    // Extracted text logic for better performance
+
     private func slotNumberText(for number: Int) -> String {
         return number == -1 ? "?" : "\(number)"
     }
 
-    func spinSlot() {
+    private func spinSlot() {
         guard viewModel.balance >= viewModel.slotCosts[0] else {
             resultMessage = "Not enough money!"
+            hideMessageAfterDelay()
             return
         }
         isSpinning = true
         viewModel.spinSlot(index: 0) { didWin, prize in
             isSpinning = false
-            resultMessage = didWin ? "You won $\(prize)!" : "You lost!"
+            withAnimation {
+                resultMessage = didWin ? "🎉 You won $\(prize)! 🎉" : "❌ You lost!"
+            }
+            hideMessageAfterDelay()
         }
     }
+
+    private func hideMessageAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation {
+                self.resultMessage = nil
+            }
+        }
+    }
+}
+
+extension Color {
+    static let rustyBrown = Color(red: 0.5, green: 0.3, blue: 0.1) // A dark, aged brown to feel worn out
 }
 
 // MARK: - BudgetSlotView
@@ -403,58 +456,102 @@ struct BudgetSlotView: View {
     @State private var resultMessage: String?
 
     var body: some View {
-        VStack(spacing: 15) {
-            Text("🎮 Budget Slot 🎮")
-                .font(.title)
-                .foregroundColor(.green)
+        ZStack {
+            Color.black.edgesIgnoringSafeArea(.all) // Full black background
 
-            Text("Balance: $\(viewModel.balance)")
-                .font(.headline)
-                .foregroundColor(.white)
+            VStack(spacing: 15) {
+                Text("🎮 Budget Slot 🎮")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.budgetGreen)
+                    .shadow(color: .budgetGreen.opacity(0.8), radius: 3)
 
-            HStack {
-                ForEach(viewModel.slotResults[1], id: \.self) { number in
-                    Text("\(number == -1 ? "?" : "\(number)")")
-                        .font(.largeTitle)
-                        .frame(width: 50, height: 50)
-                        .background(Color.blue)
-                        .cornerRadius(8)
-                        .foregroundColor(.white)
+                Text("Balance: $\(viewModel.balance)")
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                HStack {
+                    ForEach(viewModel.slotResults[1], id: \.self) { number in
+                        Text(slotNumberText(for: number))
+                            .font(.title)
+                            .frame(width: 50, height: 50)
+                            .background(Color.blue.opacity(0.8))
+                            .cornerRadius(8)
+                            .foregroundColor(.white)
+                            .shadow(radius: 2)
+                    }
                 }
-            }
 
-            Button(action: spinSlot) {
-                Text("Spin for $\(viewModel.slotCosts[1])")
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.black)
-                    .cornerRadius(10)
+                if let resultMessage = resultMessage {
+                    Text(resultMessage)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(10)
+                        .transition(.opacity)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation {
+                                    self.resultMessage = nil
+                                }
+                            }
+                        }
+                }
+
+                Button(action: spinSlot) {
+                    Text("Spin for $\(viewModel.slotCosts[1])")
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(isSpinning ? Color.gray : Color.budgetGreen)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                        .shadow(radius: 3)
+                }
+                .disabled(isSpinning)
             }
-            .disabled(isSpinning)
+            .padding()
+            .frame(maxWidth: 320)
+            .background(Color.blue.opacity(0.3))
+            .cornerRadius(12)
+            .shadow(radius: 5)
+            .animation(.easeInOut, value: resultMessage)
         }
-        .padding()
-        .background(Color.black.opacity(0.9))
-        .cornerRadius(10)
     }
-    
-    // Extracted text logic for better performance
+
     private func slotNumberText(for number: Int) -> String {
         return number == -1 ? "?" : "\(number)"
     }
 
-    func spinSlot() {
+    private func spinSlot() {
         guard viewModel.balance >= viewModel.slotCosts[1] else {
             resultMessage = "Not enough money!"
+            hideMessageAfterDelay()
             return
         }
         isSpinning = true
         viewModel.spinSlot(index: 1) { didWin, prize in
             isSpinning = false
-            resultMessage = didWin ? "You won $\(prize)!" : "You lost!"
+            withAnimation {
+                resultMessage = didWin ? "🎉 You won $\(prize)! 🎉" : "❌ You lost!"
+            }
+            hideMessageAfterDelay()
+        }
+    }
+
+    private func hideMessageAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation {
+                self.resultMessage = nil
+            }
         }
     }
 }
 
+extension Color {
+    static let budgetGreen = Color(red: 0.3, green: 1.0, blue: 0.3) // Bright green for a fun, budget-friendly vibe
+}
 // MARK: - StandardSlotView
 struct StandardSlotView: View {
     @EnvironmentObject var viewModel: GameViewModel
@@ -462,56 +559,101 @@ struct StandardSlotView: View {
     @State private var resultMessage: String?
 
     var body: some View {
-        VStack(spacing: 15) {
-            Text("🎰 Standard Slot 🎰")
-                .font(.title)
-                .foregroundColor(.yellow)
+        ZStack {
+            Color.black.edgesIgnoringSafeArea(.all) // Full black background
 
-            Text("Balance: $\(viewModel.balance)")
-                .font(.headline)
-                .foregroundColor(.white)
+            VStack(spacing: 15) {
+                Text("🎰 Standard Slot 🎰")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.goldred)
+                    .shadow(color: .goldred.opacity(0.8), radius: 5)
 
-            HStack {
-                ForEach(viewModel.slotResults[2], id: \.self) { number in
-                    Text("\(number == -1 ? "?" : "\(number)")")
-                        .font(.largeTitle)
-                        .frame(width: 60, height: 60)
-                        .background(Color.red)
-                        .cornerRadius(10)
-                        .foregroundColor(.white)
+                Text("Balance: $\(viewModel.balance)")
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                HStack {
+                    ForEach(viewModel.slotResults[2], id: \.self) { number in
+                        Text(slotNumberText(for: number))
+                            .font(.largeTitle)
+                            .frame(width: 60, height: 60)
+                            .background(LinearGradient(gradient: Gradient(colors: [.red, .goldred]), startPoint: .top, endPoint: .bottom))
+                            .cornerRadius(10)
+                            .foregroundColor(.white)
+                            .shadow(color: .goldred, radius: 4)
+                    }
                 }
-            }
 
-            Button(action: spinSlot) {
-                Text("Spin for $\(viewModel.slotCosts[2])")
-                    .padding()
-                    .background(Color.yellow)
-                    .foregroundColor(.black)
-                    .cornerRadius(10)
+                if let resultMessage = resultMessage {
+                    Text(resultMessage)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(10)
+                        .transition(.opacity)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation {
+                                    self.resultMessage = nil
+                                }
+                            }
+                        }
+                }
+
+                Button(action: spinSlot) {
+                    Text("Spin for $\(viewModel.slotCosts[2])")
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(isSpinning ? Color.gray : Color.goldred)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                        .shadow(color: .goldred, radius: 5)
+                }
+                .disabled(isSpinning)
             }
-            .disabled(isSpinning)
+            .padding()
+            .frame(maxWidth: 350)
+            .background(Color.red.opacity(0.9))
+            .cornerRadius(12)
+            .shadow(color: .goldred, radius: 8)
+            .animation(.easeInOut, value: resultMessage)
         }
-        .padding()
-        .background(Color.red.opacity(0.8))
-        .cornerRadius(10)
     }
-    
-    // Extracted text logic for better performance
+
     private func slotNumberText(for number: Int) -> String {
         return number == -1 ? "?" : "\(number)"
     }
 
-    func spinSlot() {
+    private func spinSlot() {
         guard viewModel.balance >= viewModel.slotCosts[2] else {
             resultMessage = "Not enough money!"
+            hideMessageAfterDelay()
             return
         }
         isSpinning = true
         viewModel.spinSlot(index: 2) { didWin, prize in
             isSpinning = false
-            resultMessage = didWin ? "You won $\(prize)!" : "You lost!"
+            withAnimation {
+                resultMessage = didWin ? "🎉 You won $\(prize)! 🎉" : "❌ You lost!"
+            }
+            hideMessageAfterDelay()
         }
     }
+
+    private func hideMessageAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation {
+                self.resultMessage = nil
+            }
+        }
+    }
+}
+
+extension Color {
+    static let goldred = Color(red: 1.0, green: 0.84, blue: 0.0) // Goldred for a classic casino feel
 }
 
 // MARK: - ExpensiveSlotView
@@ -521,68 +663,102 @@ struct ExpensiveSlotView: View {
     @State private var resultMessage: String?
 
     var body: some View {
-        VStack(spacing: 15) {
-            Text("💰 Expensive Slot 💰")
-                .font(.title)
-                .foregroundColor(.yellow)
+        ZStack {
+            Color.black // Ensures full black background
+                .edgesIgnoringSafeArea(.all)
 
-            Text("Balance: $\(viewModel.balance)")
-                .font(.headline)
-                .foregroundColor(.white)
+            VStack(spacing: 15) {
+                Text("💰 Expensive Slot 💰")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.platinum)
+                    .shadow(color: .platinum.opacity(0.8), radius: 5)
 
-            HStack {
-                ForEach(viewModel.slotResults[3], id: \.self) { number in
-                    Text(slotNumberText(for: number))
-                        .font(.largeTitle)
-                        .frame(width: 70, height: 70)
-                        .background(Color.yellow) // Gold replacement
-                        .cornerRadius(12)
-                        .foregroundColor(.black)
+                Text("Balance: $\(viewModel.balance)")
+                    .font(.headline)
+                    .foregroundColor(.cyan)
+
+                HStack {
+                    ForEach(viewModel.slotResults[3], id: \.self) { number in
+                        Text(slotNumberText(for: number))
+                            .font(.largeTitle)
+                            .frame(width: 70, height: 70)
+                            .background(LinearGradient(gradient: Gradient(colors: [.platinum, .gray]), startPoint: .top, endPoint: .bottom))
+                            .cornerRadius(12)
+                            .foregroundColor(.black)
+                            .shadow(color: .platinum, radius: 4)
+                    }
                 }
-            }
 
-            if let resultMessage = resultMessage {
-                Text(resultMessage)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.black.opacity(0.7))
-                    .cornerRadius(10)
-            }
+                if let resultMessage = resultMessage {
+                    Text(resultMessage)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(10)
+                        .transition(.opacity)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation {
+                                    self.resultMessage = nil
+                                }
+                            }
+                        }
+                }
 
-            Button(action: spinSlot) {
-                Text("Spin for $\(viewModel.slotCosts[3])")
-                    .padding()
-                    .background(Color.yellow) // Gold replacement
-                    .foregroundColor(.black)
-                    .cornerRadius(10)
+                Button(action: spinSlot) {
+                    Text("Spin for $\(viewModel.slotCosts[3])")
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(isSpinning ? Color.gray : Color.platinum)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                        .shadow(color: .platinum, radius: 5)
+                }
+                .disabled(isSpinning)
             }
-            .disabled(isSpinning)
+            .padding()
+            .frame(maxWidth: 350)
+            .background(Color.black.opacity(0.9))
+            .cornerRadius(12)
+            .shadow(color: .platinum, radius: 8)
+            .animation(.easeInOut, value: resultMessage)
         }
-        .padding()
-        .background(Color.black.opacity(0.8))
-        .cornerRadius(10)
     }
 
-    // Extracted text logic for better performance
     private func slotNumberText(for number: Int) -> String {
         return number == -1 ? "?" : "\(number)"
     }
 
-    func spinSlot() {
+    private func spinSlot() {
         guard viewModel.balance >= viewModel.slotCosts[3] else {
             resultMessage = "Not enough money!"
+            hideMessageAfterDelay()
             return
         }
         isSpinning = true
-        resultMessage = nil
-
         viewModel.spinSlot(index: 3) { didWin, prize in
-            DispatchQueue.main.async {
-                isSpinning = false
-                resultMessage = didWin ? "You won $\(prize)!" : "You lost!"
+            isSpinning = false
+            withAnimation {
+                resultMessage = didWin ? "🎉 You won $\(prize)! 🎉" : "❌ You lost!"
+            }
+            hideMessageAfterDelay()
+        }
+    }
+
+    private func hideMessageAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation {
+                self.resultMessage = nil
             }
         }
     }
+}
+
+extension Color {
+    static let platinum = Color(red: 0.9, green: 0.9, blue: 0.98) // Platinum for a luxury high-end feel
 }
 
 // MARK: - VIPSlotView
@@ -592,56 +768,106 @@ struct VIPSlotView: View {
     @State private var resultMessage: String?
 
     var body: some View {
-        VStack(spacing: 15) {
-            Text("🚀 VIP Slot 🚀")
-                .font(.title)
-                .foregroundColor(.blue)
+        ZStack {
+            Color.black // Ensures the entire background is black
+                .edgesIgnoringSafeArea(.all)
 
-            Text("Balance: $\(viewModel.balance)")
-                .font(.headline)
-                .foregroundColor(.cyan)
+            VStack(spacing: 12) {
+                Text("👑 VIP Slot 👑")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.gold)
+                    .shadow(color: Color.gold.opacity(0.8), radius: 5)
 
-            HStack {
-                ForEach(viewModel.slotResults[4], id: \.self) { number in
-                    Text("\(number == -1 ? "?" : "\(number)")")
-                        .font(.largeTitle)
-                        .frame(width: 75, height: 75)
-                        .background(Color.cyan)
-                        .cornerRadius(15)
-                        .foregroundColor(.black)
+                Text("Balance: $\(viewModel.balance)")
+                    .font(.headline)
+                    .foregroundColor(.gold)
+
+                HStack(spacing: 10) {
+                    ForEach(viewModel.slotResults[4], id: \.self) { number in
+                        Text(slotNumberText(for: number))
+                            .font(.title)
+                            .frame(width: 60, height: 60)
+                            .background(LinearGradient(gradient: Gradient(colors: [.gold, .orange]), startPoint: .top, endPoint: .bottom))
+                            .cornerRadius(12)
+                            .foregroundColor(.black)
+                            .shadow(color: .gold, radius: 4)
+                    }
                 }
-            }
+                .padding(.vertical, 8)
 
-            Button(action: spinSlot) {
-                Text("Spin for $\(viewModel.slotCosts[4])")
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                if let resultMessage = resultMessage {
+                    Text(resultMessage)
+                        .font(.body)
+                        .foregroundColor(.white)
+                        .padding(10)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(8)
+                        .multilineTextAlignment(.center)
+                        .transition(.opacity)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation {
+                                    self.resultMessage = nil
+                                }
+                            }
+                        }
+                }
+
+                Button(action: spinSlot) {
+                    Text("Spin for $\(viewModel.slotCosts[4])")
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(isSpinning ? Color.gray : Color.gold)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                        .shadow(color: .gold, radius: 5)
+                }
+                .disabled(isSpinning)
+                .padding(.top, 8)
             }
-            .disabled(isSpinning)
+            .padding()
+            .frame(maxWidth: 350)
+            .background(Color.black.opacity(0.95))
+            .cornerRadius(12)
+            .shadow(color: .gold, radius: 8)
+            .animation(.easeInOut, value: resultMessage)
         }
-        .padding()
-        .background(Color.black.opacity(0.9))
-        .cornerRadius(10)
     }
-    
-    // Extracted text logic for better performance
+
     private func slotNumberText(for number: Int) -> String {
-        return number == -1 ? "?" : "\(number)"
+        number == -1 ? "?" : "\(number)"
     }
-    
-    func spinSlot() {
+
+    private func spinSlot() {
         guard viewModel.balance >= viewModel.slotCosts[4] else {
             resultMessage = "Not enough money!"
+            hideMessageAfterDelay()
             return
         }
         isSpinning = true
         viewModel.spinSlot(index: 4) { didWin, prize in
             isSpinning = false
-            resultMessage = didWin ? "You won $\(prize)!" : "You lost!"
+            withAnimation {
+                resultMessage = didWin ? "🎉 You won $\(prize)! 🎉" : "❌ You lost!"
+            }
+            hideMessageAfterDelay()
         }
     }
+
+    private func hideMessageAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation {
+                self.resultMessage = nil
+            }
+        }
+    }
+}
+
+extension Color {
+    static let gold = Color(red: 1.0, green: 0.84, blue: 0.0) // VIP Gold Color
 }
 
 // MARK: - DailyBonusView
