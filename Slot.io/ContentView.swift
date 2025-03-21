@@ -345,8 +345,7 @@ struct PoorMansSlotView: View {
 
     var body: some View {
         ZStack {
-            Color.black.edgesIgnoringSafeArea(.all) // Full black background
-
+            Color.black.edgesIgnoringSafeArea(.all)
             VStack(spacing: 15) {
                 Text("🪵 Poor Man’s Slot 🪵")
                     .font(.title2)
