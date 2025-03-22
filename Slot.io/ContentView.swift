@@ -155,8 +155,12 @@ class GameViewModel: ObservableObject {
 
     // MARK: - Reset Highscore
     func resetHighscore() {
-        highscore = 0
-        UserDefaults.standard.set(highscore, forKey: "highscore")
+        if balance > 1000 {
+            highscore = 0
+            balance = 1000  // Reset balance to 1000
+            UserDefaults.standard.set(highscore, forKey: "highscore")
+            UserDefaults.standard.set(balance, forKey: "balance")
+        }
     }
 
     // MARK: - Save Game Data
@@ -170,7 +174,6 @@ class GameViewModel: ObservableObject {
 
 struct HomeView: View {
     @EnvironmentObject var viewModel: GameViewModel
-    @State private var showInfoAlert = false
 
     var body: some View {
         NavigationStack {
@@ -179,50 +182,47 @@ struct HomeView: View {
                 LinearGradient(gradient: Gradient(colors: [Color.purple.opacity(0.8), Color.black]), startPoint: .top, endPoint: .bottom)
                     .edgesIgnoringSafeArea(.all)
 
-                VStack(spacing: 30) {
-                    // MARK: - App Title
-                    Text("🎰 Slot.io")
-                        .font(.largeTitle)
-                        .bold()
-                        .foregroundColor(.white)
-                        .shadow(radius: 5)
-                        .padding(.top, 40)
+                ScrollView {
+                    VStack(spacing: 30) {
+                        // MARK: - App Title
+                        Text("🎰 Slot.io")
+                            .font(.largeTitle)
+                            .bold()
+                            .foregroundColor(.white)
+                            .shadow(radius: 5)
+                            .padding(.top, 40)
 
-                    // MARK: - Balance & Highscore
-                    HStack(spacing: 50) {
-                        BalanceView(title: "Balance", amount: viewModel.balance, color: .green)
-                        BalanceView(title: "Highscore", amount: viewModel.highscore, color: .yellow)
+                        // MARK: - Balance & Highscore
+                        HStack(spacing: 50) {
+                            BalanceView(title: "Balance", amount: viewModel.balance, color: .green)
+                            BalanceView(title: "Highscore", amount: viewModel.highscore, color: .yellow)
+                        }
+
+                        // MARK: - Navigation Buttons
+                        VStack(spacing: 20) {
+                            NavigationLink(destination: SlotMachineView()) {
+                                HomeButton(title: "🎰 Play Slots", color: .blue)
+                            }
+
+                            NavigationLink(destination: DailyBonusView()) {
+                                HomeButton(title: "🎁 Daily Bonus", color: .green)
+                            }
+
+                            NavigationLink(destination: LeaderboardView()) {
+                                HomeButton(title: "🏆 Leaderboard", color: .yellow)
+                            }
+
+                            NavigationLink(destination: SettingsView()) {
+                                HomeButton(title: "⚙️ Settings", color: .gray)
+                            }
+                        }
+                        .padding(.vertical, 20) // Adds spacing for scrolling
                     }
-
-                    Spacer()
-
-                    // MARK: - Navigation Buttons
-                    VStack(spacing: 20) {
-                        NavigationLink(destination: SlotMachineView()) {
-                            HomeButton(title: "🎰 Play Slots", color: .blue)
-                        }
-
-                        NavigationLink(destination: DailyBonusView()) {
-                            HomeButton(title: "🎁 Daily Bonus", color: .green)
-                        }
-
-                        NavigationLink(destination: LeaderboardView()) {
-                            HomeButton(title: "🏆 Leaderboard", color: .yellow)
-                        }
-
-                        NavigationLink(destination: SettingsView()) {
-                            HomeButton(title: "⚙️ Settings", color: .gray)
-                        }
-                    }
-
-                    Spacer()
+                    .padding()
                 }
-                .padding()
             }
             .navigationBarItems(
-                leading: Button(action: {
-                    showInfoAlert = true
-                }) {
+                leading: NavigationLink(destination: InfoView()) {
                     Image(systemName: "info.circle")
                         .foregroundColor(.white)
                 },
@@ -231,11 +231,6 @@ struct HomeView: View {
                         .foregroundColor(.white)
                 }
             )
-            .alert("About Slot.io", isPresented: $showInfoAlert) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text("Slot.io is a fun slot machine game. Enjoy and play responsibly!")
-            }
         }
     }
 
@@ -243,7 +238,7 @@ struct HomeView: View {
     private func shareGame() {
         let message = "I'm playing Slot.io and my balance is $\(viewModel.balance)! Try it out!"
         let activityVC = UIActivityViewController(activityItems: [message], applicationActivities: nil)
-        
+
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootViewController = windowScene.windows.first?.rootViewController {
             rootViewController.present(activityVC, animated: true, completion: nil)
@@ -289,6 +284,36 @@ struct HomeButton: View {
             .clipShape(RoundedRectangle(cornerRadius: 15))
             .shadow(radius: 5)
             .padding(.horizontal, 20)
+    }
+}
+
+struct InfoView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("About This App")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding(.bottom, 8)
+
+                Text("Slot.io is a gambling simulator where you start with $1000 and try to grow your balance by playing slot machines. Each slot machine has a different probability of success, and a random prize is awarded.")
+                    .font(.body)
+                    .padding(.bottom, 8)
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Version: 3.4.1")
+                        .font(.headline)
+                    Text("Developed by: Nolan Law")
+                        .font(.subheadline)
+                    Text("© 2025 Slot.io. All rights reserved.")
+                        .font(.subheadline)
+                }
+            }
+            .padding()
+        }
+        .navigationTitle("Info")
     }
 }
 
@@ -1007,17 +1032,18 @@ struct SettingsView: View {
                 Button(action: {
                     showResetHighscoreAlert = true
                 }) {
-                    Text("Reset Highscore")
+                    Text("Reset Highscore & Balance")
                         .font(.title2)
                         .bold()
                         .padding()
                         .frame(width: 250)
-                        .background(Color.red)
+                        .background(viewModel.balance >= 1000 ? Color.red : Color.gray)
                         .foregroundColor(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 15))
                         .shadow(radius: 5)
                 }
-                .alert("Are you sure you want to reset your highscore?", isPresented: $showResetHighscoreAlert) {
+                .disabled(viewModel.balance < 1000)
+                .alert("Are you sure you want to reset your highscore and balance?", isPresented: $showResetHighscoreAlert) {
                     Button("Yes", role: .destructive) {
                         viewModel.resetHighscore()
                     }
